@@ -1,0 +1,24 @@
+---
+- name: Ensure yum-utils is installed.
+  ansible.builtin.package:
+    name: yum-utils
+    state: present
+
+- name: Ensure all installed packages are up-to-date using DNF module.
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest
+    update_cache: true
+    update_only: true
+
+- name: Ensure packages not needed are removed.
+  ansible.builtin.dnf:
+    autoremove: true
+
+- name: Check if reboot is required.
+  ansible.builtin.command:
+    cmd: "/usr/bin/needs-restarting -r"
+  register: reboot_reg
+  changed_when: reboot_reg.rc == 1
+  failed_when: reboot_reg.rc != 0 and reboot_reg.rc != 1
+  notify: Reboot server
